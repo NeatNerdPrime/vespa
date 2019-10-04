@@ -105,14 +105,31 @@ public class FelixFrameworkIntegrationTest {
     }
 
     @Test
+    public void requireThatDuplicateBundlesCannotBeInstalled() throws Exception {
+        FelixFramework felix = TestDriver.newOsgiFramework();
+        felix.start();
+        startBundle(felix, "cert-l1.jar");
+        try {
+            startBundle(felix, "cert-l1-dup.jar");
+        } catch (BundleException e) {
+            assertTrue(e.getMessage().contains("Bundle symbolic name and version are not unique"));
+        } finally {
+            felix.stop();
+        }
+    }
+
+    @Test
     public void requireThatBundlesCanBeRefreshed() throws Exception {
         FelixFramework felix = TestDriver.newOsgiFramework();
         felix.start();
         Bundle bundleL = startBundle(felix, "cert-l1.jar");
         Bundle bundleM = startBundle(felix, "cert-ml.jar");
         assertEquals(1, callClass(bundleM, "com.yahoo.jdisc.bundle.m.CertificateM"));
+
+        // Switch from l1 to l2 (identical bundles, except for bsn)
         bundleL.uninstall();
         startBundle(felix, "cert-l2.jar");
+
         felix.refreshPackages();
         assertEquals(2, callClass(bundleM, "com.yahoo.jdisc.bundle.m.CertificateM"));
         felix.stop();
