@@ -68,7 +68,7 @@
         <assertj.vespa.version>3.26.0</assertj.vespa.version>
 
         <!-- Athenz dependencies. Make sure these dependencies match those in Vespa's internal repositories -->
-        <aws-sdk.vespa.version>1.12.752</aws-sdk.vespa.version>
+        <aws-sdk.vespa.version>1.12.753</aws-sdk.vespa.version>
         <athenz.vespa.version>1.11.60</athenz.vespa.version>
         <!-- Athenz END -->
 
@@ -189,7 +189,7 @@
         <maven-site-plugin.vespa.version>3.12.1</maven-site-plugin.vespa.version>
         <maven-source-plugin.vespa.version>3.3.1</maven-source-plugin.vespa.version>
         <properties-maven-plugin.vespa.version>1.2.1</properties-maven-plugin.vespa.version>
-        <versions-maven-plugin.vespa.version>2.16.2</versions-maven-plugin.vespa.version>
+        <versions-maven-plugin.vespa.version>2.17.0</versions-maven-plugin.vespa.version>
     </properties>
 
     <profiles>
