@@ -38,7 +38,7 @@ public enum Stemming {
      * @throws IllegalArgumentException if there is no stemming type with the given name
      */
     public static Stemming get(String stemmingName) {
-        return switch (stemmingName.toLowerCase(Locale.ENGLISH)) {
+        return switch (stemmingName.toLowerCase(Locale.ROOT)) {
             case "none" -> Stemming.NONE;
             case "shortest" -> Stemming.SHORTEST;
             case "best" -> Stemming.BEST;

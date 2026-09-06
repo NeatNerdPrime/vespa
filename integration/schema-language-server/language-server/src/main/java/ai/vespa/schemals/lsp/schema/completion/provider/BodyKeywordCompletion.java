@@ -1,6 +1,8 @@
 package ai.vespa.schemals.lsp.schema.completion.provider;
 
 import java.nio.file.Path;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -32,11 +34,14 @@ import ai.vespa.schemals.parser.ast.globalPhase;
 import ai.vespa.schemals.parser.ast.hnswIndex;
 import ai.vespa.schemals.parser.ast.indexInsideField;
 import ai.vespa.schemals.parser.ast.indexOutsideDoc;
+import ai.vespa.schemals.parser.ast.INDEX;
 import ai.vespa.schemals.parser.ast.linguisticsElm;
 import ai.vespa.schemals.parser.ast.onnxModel;
 import ai.vespa.schemals.parser.ast.openLbrace;
+import ai.vespa.schemals.parser.ast.PROFILE;
 import ai.vespa.schemals.parser.ast.rankProfile;
 import ai.vespa.schemals.parser.ast.rootSchema;
+import ai.vespa.schemals.parser.ast.SEARCH;
 import ai.vespa.schemals.parser.ast.secondPhase;
 import ai.vespa.schemals.parser.ast.significanceElm;
 import ai.vespa.schemals.parser.ast.sortingElm;
@@ -248,9 +253,14 @@ public class BodyKeywordCompletion implements CompletionProvider {
         }
     }};
 
+    private static final String TOKENS_MODE_CHOICE = "${1|original,first-alternative,alternatives,original-and-alternatives|}";
+
     private static final List<CompletionItem> linguisticsBodySnippets = List.of(
         CompletionUtils.constructSnippet("profile", "profile: $0", "profile:"),
-        CompletionUtils.constructSnippet("profile", "profile {\n\tindex: $1\n\tsearch: $0\n}", "profile {}")
+        CompletionUtils.constructSnippet("profile", "profile {\n\tindex: $1\n\tsearch: $0\n}", "profile {}"),
+        CompletionUtils.constructSnippet("tokens", "tokens: " + TOKENS_MODE_CHOICE, "tokens:"),
+        CompletionUtils.constructSnippet("index", "index {\n\t$0\n}", "index {}"),
+        CompletionUtils.constructSnippet("search", "search {\n\t$0\n}", "search {}")
     );
 
     private static final List<CompletionItem> linguisticsProfileBodySnippets = List.of(
@@ -258,21 +268,39 @@ public class BodyKeywordCompletion implements CompletionProvider {
         CompletionUtils.constructSnippet("search", "search: $0")
     );
 
+    private static final List<CompletionItem> linguisticsSettingsBodySnippets = List.of(
+        CompletionUtils.constructSnippet("profile", "profile: $0"),
+        CompletionUtils.constructSnippet("tokens", "tokens: " + TOKENS_MODE_CHOICE)
+    );
+
     /**
-     * A linguistics element holds two nested bodies, <code>linguistics { profile { ... } }</code>,
-     * which the grammar represents as a single flat node. Which keywords are valid therefore depends on
-     * the brace depth at the cursor rather than on the enclosing AST class alone.
+     * A linguistics element holds nested bodies, e.g. <code>linguistics { profile { ... } }</code> or
+     * <code>linguistics { index { ... } }</code>, which the grammar represents as a single flat node.
+     * Which keywords are valid therefore depends on which keyword opened the brace enclosing the cursor
+     * (tracked here as a stack), not just the brace depth.
      */
     private static List<CompletionItem> linguisticsCompletionItems(Node linguisticsNode, Position position) {
-        int braceDepth = 0;
+        Deque<String> blockStack = new ArrayDeque<>();
+        String pendingKeyword = null;
         for (Node child : linguisticsNode) {
             if (CSTUtils.positionLT(position, child.getRange().getStart())) break;
-            if (child.isASTInstance(openLbrace.class) || child.isASTInstance(LBRACE.class)) ++braceDepth;
-            else if (child.isASTInstance(RBRACE.class)) --braceDepth;
+            if (child.isASTInstance(PROFILE.class)) pendingKeyword = "profile";
+            else if (child.isASTInstance(INDEX.class)) pendingKeyword = "index";
+            else if (child.isASTInstance(SEARCH.class)) pendingKeyword = "search";
+            else if (child.isASTInstance(openLbrace.class) || child.isASTInstance(LBRACE.class)) {
+                // The very first brace is the outer 'linguistics {' body itself, not a keyword-tagged
+                // sub-block, and has no preceding PROFILE/INDEX/SEARCH keyword: don't push a context for it.
+                if (pendingKeyword != null) blockStack.push(pendingKeyword);
+                pendingKeyword = null;
+            } else if (child.isASTInstance(RBRACE.class)) {
+                if (!blockStack.isEmpty()) blockStack.pop();
+            }
         }
 
-        if (braceDepth == 1) return linguisticsBodySnippets;
-        if (braceDepth == 2) return linguisticsProfileBodySnippets;
+        if (blockStack.isEmpty()) return linguisticsBodySnippets;
+        if (blockStack.size() == 1) {
+            return "profile".equals(blockStack.peek()) ? linguisticsProfileBodySnippets : linguisticsSettingsBodySnippets;
+        }
         return List.of();
     }
 

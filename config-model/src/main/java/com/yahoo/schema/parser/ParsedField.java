@@ -2,6 +2,7 @@
 package com.yahoo.schema.parser;
 
 import com.yahoo.schema.document.Stemming;
+import com.yahoo.schema.document.TokensMode;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,6 +31,8 @@ public class ParsedField extends ParsedBlock {
     private String normalizing = null;
     private String searchLinguisticsProfile;
     private String indexLinguisticsProfile;
+    private TokensMode searchLinguisticsTokens;
+    private TokensMode indexLinguisticsTokens;
     private final ParsedMatchSettings matchInfo = new ParsedMatchSettings();
     private Stemming stemming = null;
     private ParsedIndexingOp indexingOp = null;
@@ -70,6 +73,8 @@ public class ParsedField extends ParsedBlock {
     Optional<String> getNormalizing() { return Optional.ofNullable(normalizing); }
     Optional<String> getIndexLinguisticsProfile() { return Optional.ofNullable(indexLinguisticsProfile); }
     Optional<String> getSearchLinguisticsProfile() { return Optional.ofNullable(searchLinguisticsProfile); }
+    Optional<TokensMode> getIndexLinguisticsTokens() { return Optional.ofNullable(indexLinguisticsTokens); }
+    Optional<TokensMode> getSearchLinguisticsTokens() { return Optional.ofNullable(searchLinguisticsTokens); }
     Optional<ParsedIndexingOp> getIndexing() { return Optional.ofNullable(indexingOp); }
     Optional<ParsedSorting> getSorting() { return Optional.ofNullable(sortSettings); }
     Map<String, String> getRankTypes() { return Collections.unmodifiableMap(rankTypes); }
@@ -129,8 +134,22 @@ public class ParsedField extends ParsedBlock {
     public void setLiteral(boolean value) { this.isLiteral = value; }
     public void setNormal(boolean value) { this.isNormal = value; }
     public void setNormalizing(String value) { this.normalizing = value; }
-    public void setIndexLinguisticsProfile(String profile) { this.indexLinguisticsProfile = profile; }
-    public void setSearchLinguisticsProfile(String profile) { this.searchLinguisticsProfile = profile; }
+    public void setIndexLinguisticsProfile(String profile) {
+        verifyThat(indexLinguisticsProfile == null, "already has linguistics profile for index", indexLinguisticsProfile);
+        this.indexLinguisticsProfile = profile;
+    }
+    public void setSearchLinguisticsProfile(String profile) {
+        verifyThat(searchLinguisticsProfile == null, "already has linguistics profile for search", searchLinguisticsProfile);
+        this.searchLinguisticsProfile = profile;
+    }
+    public void setIndexLinguisticsTokens(TokensMode tokens) {
+        verifyThat(indexLinguisticsTokens == null, "already has linguistics tokens for index");
+        this.indexLinguisticsTokens = tokens;
+    }
+    public void setSearchLinguisticsTokens(TokensMode tokens) {
+        verifyThat(searchLinguisticsTokens == null, "already has linguistics tokens for search");
+        this.searchLinguisticsTokens = tokens;
+    }
     public void setStemming(Stemming stemming) { this.stemming = stemming; }
     public void setWeight(int weight) { this.weight = weight; }
 
