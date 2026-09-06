@@ -337,6 +337,7 @@ public class SchemaParserTest {
             new BadFileTestCase("src/test/sdfiles/single/bm25forlabelsattrbad.sd", 1),
             new BadFileTestCase("src/test/sdfiles/single/bm25labelbarebad.sd", 1),
             new BadFileTestCase("src/test/sdfiles/single/bm25labelemptybad.sd", 1),
+            new BadFileTestCase("src/test/sdfiles/single/badlinguistics.sd", 3),
             new BadFileTestCase("src/test/sdfiles/single/bm25quotelabelemptybad.sd", 1),
             new BadFileTestCase("src/test/sdfiles/single/bm25labelunknownfieldbad.sd", 1),
             new BadFileTestCase("src/test/sdfiles/single/bm25labelwrapperbad.sd", 1),

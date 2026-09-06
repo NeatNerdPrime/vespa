@@ -101,6 +101,8 @@ public class SDField extends Field implements ImmutableSDField {
 
     private String indexLinguisticsProfile;
     private String searchLinguisticsProfile;
+    private TokensMode indexLinguisticsTokens;
+    private TokensMode searchLinguisticsTokens;
 
     /** Extra query commands of this field */
     private final List<String> queryCommands = new java.util.ArrayList<>(0);
@@ -784,6 +786,16 @@ public class SDField extends Field implements ImmutableSDField {
 
     @Override
     public String getSearchLinguisticsProfile() { return searchLinguisticsProfile; }
+
+    public void setIndexLinguisticsTokens(TokensMode tokens) { this.indexLinguisticsTokens = tokens; }
+
+    @Override
+    public TokensMode getIndexLinguisticsTokens() { return indexLinguisticsTokens; }
+
+    public void setSearchLinguisticsTokens(TokensMode tokens) { this.searchLinguisticsTokens = tokens; }
+
+    @Override
+    public TokensMode getSearchLinguisticsTokens() { return searchLinguisticsTokens; }
 
     public void addQueryCommand(String name) {
        queryCommands.add(name);

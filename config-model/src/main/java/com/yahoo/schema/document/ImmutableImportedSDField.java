@@ -160,6 +160,12 @@ public class ImmutableImportedSDField implements ImmutableSDField {
     public String getSearchLinguisticsProfile() { return importedField.targetField().getSearchLinguisticsProfile(); }
 
     @Override
+    public TokensMode getIndexLinguisticsTokens() { return importedField.targetField().getIndexLinguisticsTokens(); }
+
+    @Override
+    public TokensMode getSearchLinguisticsTokens() { return importedField.targetField().getSearchLinguisticsTokens(); }
+
+    @Override
     public ImmutableSDField getStructField(String name) {
         throw createUnsupportedException("struct");
     }
@@ -176,6 +182,25 @@ public class ImmutableImportedSDField implements ImmutableSDField {
 
     @Override
     public Stemming getStemming(Schema schema) {
+        throw createUnsupportedException("stemming");
+    }
+
+    // The tokens getters above delegate to the target field, as callers read them before deciding
+    // whether a field is imported. Resolving what they mean for stemming is not supported, as for
+    // getStemming(Schema): imported fields are attributes, which are never stemmed.
+
+    @Override
+    public Stemming getIndexStemming(Schema schema) {
+        throw createUnsupportedException("stemming");
+    }
+
+    @Override
+    public Stemming getSearchStemming(Schema schema) {
+        throw createUnsupportedException("stemming");
+    }
+
+    @Override
+    public Stemming getEffectiveSearchStemming(Schema schema) {
         throw createUnsupportedException("stemming");
     }
 

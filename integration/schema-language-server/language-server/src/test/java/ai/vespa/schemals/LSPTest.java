@@ -105,8 +105,10 @@ public class LSPTest {
     }
 
     /**
-     * The linguistics element nests two bodies, linguistics { profile { ... } }, which the grammar
-     * flattens into a single node, so {@link BodyKeywordCompletion} has to tell them apart by brace depth.
+     * The linguistics element nests bodies, e.g. linguistics { profile { ... } } or
+     * linguistics { index { ... } }, which the grammar flattens into a single node, so
+     * {@link BodyKeywordCompletion} has to tell them apart by which keyword opened the
+     * enclosing brace, not just brace depth.
      */
     @Test
     void linguisticsCompletionTest() throws IOException, InvalidContextException {
@@ -129,10 +131,15 @@ public class LSPTest {
         DocumentManager document = scheduler.getDocument(fileURI);
 
         // Positions are 0-indexed and point at the start of a line inside the given body.
-        assertEquals(List.of("profile", "profile"), completionLabelsAt(scheduler, schemaIndex, messageHandler, document, new Position(8, 16)),
-                     "Inside a linguistics body only profile should be suggested.");
+        assertEquals(List.of("index", "profile", "profile", "search", "tokens"),
+                     completionLabelsAt(scheduler, schemaIndex, messageHandler, document, new Position(8, 16)),
+                     "Directly inside a linguistics body, profile, tokens, index and search should be suggested.");
         assertEquals(List.of("index", "search"), completionLabelsAt(scheduler, schemaIndex, messageHandler, document, new Position(10, 20)),
                      "Inside a linguistics profile body index and search should be suggested.");
+        assertEquals(List.of("profile", "tokens"), completionLabelsAt(scheduler, schemaIndex, messageHandler, document, new Position(25, 20)),
+                     "Inside a linguistics index body profile and tokens should be suggested.");
+        assertEquals(List.of("profile", "tokens"), completionLabelsAt(scheduler, schemaIndex, messageHandler, document, new Position(29, 20)),
+                     "Inside a linguistics search body profile and tokens should be suggested.");
         assertTrue(completionLabelsAt(scheduler, schemaIndex, messageHandler, document, new Position(16, 12)).contains("linguistics"),
                    "linguistics should be suggested in a field body.");
     }

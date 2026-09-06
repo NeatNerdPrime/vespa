@@ -43,6 +43,7 @@ public class Processing {
                 OptimizeIlscript::new,
                 ValidateFieldWithIndexSettingsCreatesIndex::new,
                 AttributesImplicitWord::new,
+                LinguisticsSettings::new,
                 MutableAttributes::new,
                 CreatePositionZCurve::new,
                 DictionaryProcessor::new,

@@ -506,7 +506,7 @@ public class Schema implements ImmutableSchema {
     }
 
     /** Returns the schema level index of this name, in this or any inherited schema, if any */
-    Optional<Index> getSchemaIndex(String name) {
+    public Optional<Index> getSchemaIndex(String name) {
         if (indices.containsKey(name)) return Optional.of(indices.get(name));
         if (inherited.isPresent()) return requireInherited().getSchemaIndex(name);
         return Optional.empty();
