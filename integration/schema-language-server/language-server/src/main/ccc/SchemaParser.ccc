@@ -554,6 +554,7 @@ TOKEN :
 | < SELECT_ELEMENTS_BY: "select-elements-by" >
 | < SUMMARY_FEATURES: "summary-features" >
 | < RANK_FEATURES: "rank-features" >
+| < SORT_FEATURES: "sort-features" >
 | < EXPRESSION: "expression" >
 | < RANK_PROPERTIES: "rank-properties" >
 | < RERANK_COUNT: "rerank-count" >
@@ -1188,7 +1189,8 @@ void fieldBodyElm(ParsedField field) : { }
        structFieldElm(field) |
        summaryToElm(field) |
        weightElm(field) |
-       weightedsetElm(field.getType())
+       weightedsetElm(field.getType()) |
+       mapElm(field)
     )
 ;
 
@@ -1322,6 +1324,25 @@ void weightedsetElm(ParsedType fieldType) : { }
 void weightedsetBody(ParsedType type) : { }
     ( <CREATE_IF_NONEXISTENT> { type.setCreateIfNonExistent(true); }
       | <REMOVE_IF_ZERO>      { type.setRemoveIfZero(true); } )
+;
+
+/**
+ * This rule consumes a map statement of a field element.
+ *
+ * @param field The field to modify.
+ */
+void mapElm(ParsedField field) : { }
+    <MAP> ( (<COLON> mapBody(field))
+                | (openLbrace() (mapBody(field) | <NL>)* <RBRACE>) )
+;
+
+/**
+ * This rule consumes one body item of a map block.
+ *
+ * @param field The field to modify.
+ */
+void mapBody(ParsedField field) : { }
+    ( <FAST_SEARCH> { field.setFastMapSearch(true); } )
 ;
 
 /**
@@ -1459,7 +1480,7 @@ void summaryInDocument(ParsedDocumentSummary docsum) :
             psf.setHasExplicitType();
         }
     }
-    (summaryItem(psf) | <NL>)* <RBRACE>
+    (summaryInDocumentItem(psf) | <NL>)* <RBRACE>
     {
         var old = docsum.addField(psf);
         if (old != null) {
@@ -1539,6 +1560,20 @@ void summaryItem(ParsedSummaryField field) : { }
 ;
 
 /**
+ * This rule consumes an item of a summary field block inside a document-summary.
+ * These are the items allowed in any summary field block, plus struct-field selection,
+ * which is only allowed here.
+ *
+ * @param field The field to modify.
+ */
+void summaryInDocumentItem(ParsedSummaryField field) : { }
+
+    ( summaryItem(field)
+      | summaryStructFieldSelect(field)
+    )
+;
+
+/**
  * This rule consumes a transform statement for a summary field element.
  *
  * @param field            The field to modify.
@@ -1573,6 +1608,23 @@ void summaryElementsBy(ParsedSummaryField field) :
         }
         field.setSelectElementsBySummaryFeature(featureList.get(0).toString());
     }
+;
+
+/**
+ * This rule consumes a struct-field selection statement for a summary field,
+ * used to select a subset of the sub-fields of a struct (or array/map of
+ * struct) to include in the summary. Several sub-fields may be listed,
+ * separated by commas, and the statement may be repeated. Only allowed for a
+ * summary field inside a document-summary.
+ *
+ * @param field The summary field to modify.
+ */
+void summaryStructFieldSelect(ParsedSummaryField field) :
+{
+    String str;
+}
+    <STRUCT_FIELD> <COLON> str = identifierStr() { field.addStructFieldSelect(str); }
+    (             <COMMA> str = identifierStr() { field.addStructFieldSelect(str); } )*
 ;
 
 /**
@@ -2669,7 +2721,7 @@ Node consumedFeatureListElm(boolean multiline) :
 ;
 
 /**
- * Consumes either a summary-features match-features or rank-features block of a rank profile.
+ * Consumes either a summary-features, match-features, rank-features or sort-features block of a rank profile.
  *
  * @param profile the rank profile to modify
  */
@@ -2677,7 +2729,7 @@ void featureListElm(ParsedRankProfile profile) :
 {
 }
 
-    ( summaryFeaturesElm(profile) | matchFeaturesElm(profile) | rankFeaturesElm(profile) )
+    ( summaryFeaturesElm(profile) | matchFeaturesElm(profile) | rankFeaturesElm(profile) | sortFeaturesElm(profile) )
 ;
 
 /**
@@ -2818,6 +2870,22 @@ void rankFeaturesElm(ParsedRankProfile profile) :
     Node featureListNode;
 }
     ( <RANK_FEATURES> (
+        (<COLON> featureListNode = consumedFeatureListElm(false) ) |
+        (openLbrace() featureListNode = consumedFeatureListElm(true) <RBRACE> )
+    ))
+    {
+        features = ((consumedFeatureListElm)featureListNode).getFeatureList();
+        featureListNode.setBeginOffset(featureListNode.getBeginOffset() - features.length());
+    }
+;
+
+/** Consumes a sort-features block of a rank profile */
+void sortFeaturesElm(ParsedRankProfile profile) :
+{
+    String features;
+    Node featureListNode;
+}
+    ( <SORT_FEATURES> (
         (<COLON> featureListNode = consumedFeatureListElm(false) ) |
         (openLbrace() featureListNode = consumedFeatureListElm(true) <RBRACE> )
     ))

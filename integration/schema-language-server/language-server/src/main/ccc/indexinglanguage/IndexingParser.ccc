@@ -183,7 +183,7 @@ TOKEN :
     <BUSY_WAIT: "busy_wait"> |
     <CASE: "case"> |
     <CASE_DEFAULT: "default"> |
-    <DOCUMENTID: "documentid"> |
+    <DOCUMENT_ID: "documentid"> |
     <CHUNK: "chunk"> |
     <CLEAR_STATE: "clear_state"> |
     <CREATE_IF_NON_EXISTENT: "create_if_non_existent"> |
@@ -191,6 +191,7 @@ TOKEN :
     <ELSE: "else"> |
     <EMBED: "embed"> |
     <EXACT: "exact"> |
+    <EXHEX8_ENCODE: "exhex8encode"> |
     <FLATTEN: "flatten"> |
     <FOR_EACH: "for_each"> |
     <GENERATE: "generate"> |
@@ -354,6 +355,7 @@ Expression value() :
       val = echoExp()               |
       val = embedExp()              |
       val = exactExp()              |
+      val = exHex8EncodeExp()       |
       val = flattenExp()            |
       val = forEachExp()            |
       val = generateExp()           |
@@ -465,7 +467,7 @@ Expression documentIdExp() :
     String part = null;
 }
 
-    ( <DOCUMENTID> [ SCAN(identifierStr) => (part = identifierStr()) ] )
+    ( <DOCUMENT_ID> [ SCAN(identifierStr) => (part = identifierStr()) ] )
     { return new DocumentIdExpression(part); }
 ;
 
@@ -502,6 +504,12 @@ Expression exactExp() :
  
     ( <EXACT> [ config = annotatorConfig() ] )
     { return new ExactExpression(config); }
+;
+
+Expression exHex8EncodeExp() : { }
+ 
+    ( <EXHEX8_ENCODE> )
+    { return new ExcessHex8EncodeExpression(); }
 ;
 
 Expression flattenExp() : { }
@@ -974,7 +982,7 @@ String identifierStr() :
         <CHUNK>                  |
         <CLEAR_STATE>            |
         <CREATE_IF_NON_EXISTENT> |
-        <DOCUMENTID>             |
+        <DOCUMENT_ID>            |
         <ECHO>                   |
         <EXACT>                  |
         <ELSE>                   |

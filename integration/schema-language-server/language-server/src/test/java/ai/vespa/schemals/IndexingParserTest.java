@@ -14,6 +14,7 @@ import com.yahoo.vespa.indexinglanguage.expressions.DocumentIdExpression;
 import com.yahoo.vespa.indexinglanguage.expressions.ChunkExpression;
 import com.yahoo.vespa.indexinglanguage.expressions.ConstantExpression;
 import com.yahoo.vespa.indexinglanguage.expressions.EmbedExpression;
+import com.yahoo.vespa.indexinglanguage.expressions.ExcessHex8EncodeExpression;
 import com.yahoo.vespa.indexinglanguage.expressions.Expression;
 import com.yahoo.vespa.indexinglanguage.expressions.ForEachExpression;
 import com.yahoo.vespa.indexinglanguage.expressions.IndexExpression;
@@ -86,6 +87,12 @@ public class IndexingParserTest {
             StatementExpression.class,
             DocumentIdExpression.class,
             AttributeExpression.class}, "documentid | attribute");
+
+        assertEqualsParsedFlattened(new Class<?>[] {
+            StatementExpression.class,
+            InputExpression.class,
+            ExcessHex8EncodeExpression.class,
+            AttributeExpression.class}, "input weight_src | exhex8encode | attribute");
     }
 
     private static void assertEqualsParsedFlattened(Class<?>[] expectedFlattened, String input) {
