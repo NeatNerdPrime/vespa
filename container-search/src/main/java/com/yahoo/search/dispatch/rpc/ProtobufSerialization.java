@@ -17,7 +17,6 @@ import com.yahoo.prelude.fastsearch.GroupingListHit;
 import com.yahoo.prelude.fastsearch.VespaBackend;
 import com.yahoo.prelude.query.SerializationContext;
 import com.yahoo.search.Query;
-import com.yahoo.container.QrSearchersConfig;
 import com.yahoo.search.Result;
 import com.yahoo.search.dispatch.InvokerResult;
 import com.yahoo.search.dispatch.LeanHit;
@@ -51,8 +50,8 @@ public class ProtobufSerialization {
      */
     private static final ThreadLocal<GrowableByteBuffer> threadLocalBuffer = ThreadLocal.withInitial(() -> new GrowableByteBuffer(4096));
 
-    static byte[] serializeSearchRequest(Query query, int hits, String nodeId, double contentShare, double requestTimeout, QrSearchersConfig qrSearchersConfig) {
-        return convertFromQuery(query, hits, nodeId, contentShare, requestTimeout, qrSearchersConfig).toByteArray();
+    static byte[] serializeSearchRequest(Query query, int hits, String nodeId, double contentShare, double requestTimeout) {
+        return convertFromQuery(query, hits, nodeId, contentShare, requestTimeout).toByteArray();
     }
 
     private static void convertSearchReplyErrors(Result target, List<SearchProtocol.Error> errors, boolean softTimeout, boolean annTimeout) {
@@ -64,7 +63,7 @@ public class ProtobufSerialization {
     }
 
     static SearchProtocol.SearchRequest convertFromQuery(Query query, int hits, String nodeId, double contentShare,
-                                                         double requestTimeout, QrSearchersConfig qrSearchersConfig) {
+                                                         double requestTimeout) {
         var builder = SearchProtocol.SearchRequest.newBuilder().setHits(hits).setOffset(query.getOffset())
                 .setTimeout((int) (requestTimeout * 1000));
         var documentDb = query.getModel().getDocumentDb();
@@ -170,8 +169,7 @@ public class ProtobufSerialization {
                                                                            String summaryClass,
                                                                            Set<String> fields,
                                                                            boolean includeQueryData,
-                                                                           double requestTimeout,
-                                                                           QrSearchersConfig qrSearchersConfig) {
+                                                                           double requestTimeout) {
         var builder = SearchProtocol.DocsumRequest.newBuilder()
                 .setTimeout((int) (requestTimeout * 1000))
                 .setDumpFeatures(query.properties().getBoolean(Ranking.RANKFEATURES, false));
@@ -200,7 +198,7 @@ public class ProtobufSerialization {
         }
         GrowableByteBuffer scratchPad = threadLocalBuffer.get();
         if (includeQueryData) {
-            mergeQueryDataToDocsumRequest(query, scratchPad, builder, qrSearchersConfig);
+            mergeQueryDataToDocsumRequest(query, scratchPad, builder);
         }
         if (query.getTrace().getLevel() >= 3) {
             query.trace((includeQueryData ? "ProtoBuf: Resending " : "Not resending ") + "query during document summary fetching", 3);
@@ -219,8 +217,7 @@ public class ProtobufSerialization {
 
     private static void mergeQueryDataToDocsumRequest(Query query,
                                                       GrowableByteBuffer scratchPad,
-                                                      SearchProtocol.DocsumRequest.Builder builder,
-                                                      QrSearchersConfig qrSearchersConfig) {
+                                                      SearchProtocol.DocsumRequest.Builder builder) {
         var ranking = query.getRanking();
         var featureMap = ranking.getFeatures().asMap();
 
